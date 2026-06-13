@@ -9,7 +9,7 @@ export type UserRecord = {
   about: string | null;
   university: string | null;
   course: number | null;
-  rating: string | number | null;
+  rating: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -20,6 +20,14 @@ export type CreateUserInput = {
   fullName: string;
   email: string;
   passwordHash: string;
+  university?: string | undefined;
+  course?: number | undefined;
+};
+
+export type UpdateUserInput = {
+  fullName?: string | undefined;
+  avatarUrl?: string | undefined;
+  about?: string | undefined;
   university?: string | undefined;
   course?: number | undefined;
 };
@@ -36,6 +44,18 @@ const publicUserFields = `
   created_at,
   updated_at
 `;
+
+export async function findAllPublicUsers(): Promise<PublicUser[]> {
+  const result = await db.query<PublicUser>(
+    `
+    SELECT ${publicUserFields}
+    FROM users
+    ORDER BY created_at DESC
+    `
+  );
+
+  return result.rows;
+}
 
 export async function findUserByEmail(
   email: string
@@ -78,9 +98,7 @@ export async function findPublicUserById(
   return result.rows[0] ?? null;
 }
 
-export async function createUser(
-  input: CreateUserInput
-): Promise<PublicUser> {
+export async function createUser(input: CreateUserInput): Promise<PublicUser> {
   const result = await db.query<PublicUser>(
     `
     INSERT INTO users (
@@ -109,4 +127,47 @@ export async function createUser(
   }
 
   return user;
+}
+
+export async function updatePublicUserById(
+  userId: string,
+  input: UpdateUserInput
+): Promise<PublicUser | null> {
+  const result = await db.query<PublicUser>(
+    `
+    UPDATE users
+    SET
+      full_name = COALESCE($2, full_name),
+      avatar_url = COALESCE($3, avatar_url),
+      about = COALESCE($4, about),
+      university = COALESCE($5, university),
+      course = COALESCE($6, course),
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING ${publicUserFields}
+    `,
+    [
+      userId,
+      input.fullName ?? null,
+      input.avatarUrl ?? null,
+      input.about ?? null,
+      input.university ?? null,
+      input.course ?? null,
+    ]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export async function deleteUserById(userId: string): Promise<boolean> {
+  const result = await db.query<{ id: string }>(
+    `
+    DELETE FROM users
+    WHERE id = $1
+    RETURNING id
+    `,
+    [userId]
+  );
+
+  return Boolean(result.rows[0]);
 }

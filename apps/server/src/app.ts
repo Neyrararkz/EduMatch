@@ -8,6 +8,7 @@ import cors from "cors";
 import { env } from "./config/env.js";
 import { healthRouter } from "./routes/health.router.js";
 import { authRouter } from "./routes/auth.router.js";
+import { usersRouter } from "./routes/users.router.js";
 import { AppError } from "./utils/app-error.js";
 
 const notFoundHandler: RequestHandler = (_req, res) => {
@@ -47,6 +48,7 @@ export const createApp = (): Express => {
 
   app.use("/api", healthRouter);
   app.use("/api/auth", authRouter);
+  app.use("/api/users", usersRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
