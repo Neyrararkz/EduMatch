@@ -1,5 +1,5 @@
 import { apiRequest } from "./client";
-import type { CreateProjectInput, Project } from "../types/project";
+import type { CreateProjectInput, Project, UpdateProjectInput } from "../types/project";
 
 export function getProjects(token: string) {
   return apiRequest<{ projects: Project[] }>("/projects", {
@@ -22,6 +22,14 @@ export function getProjectById(projectId: string, token: string) {
 export function createProject(input: CreateProjectInput, token: string) {
   return apiRequest<{ project: Project }>("/projects", {
     method: "POST",
+    body: input,
+    token,
+  });
+}
+
+export function updateProject(projectId: string, input: UpdateProjectInput, token: string) {
+  return apiRequest<{ project: Project }>(`/projects/${projectId}`, {
+    method: "PATCH",
     body: input,
     token,
   });

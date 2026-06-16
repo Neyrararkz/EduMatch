@@ -8,11 +8,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
-import { ProjectDetailsPage } from "./pages/ProjectDetailsPage";
-import { CreateProjectPage } from "./pages/CreateProjectPage";
-import { ProfilePage } from "./pages/UserProfilePage";
-import { UsersPage } from "./pages/UsersPage";
-import { UserDetailsPage } from "./pages/UserDetailsPage";
+import { UserProfilePage } from "./pages/UserProfilePage";
 
 function Navigation() {
   const { isAuthenticated, logout } = useAuth();
@@ -72,37 +68,10 @@ function App() {
           />
 
           <Route
-            path="/projects/create"
-            element={
-              <ProtectedRoute>
-                <CreateProjectPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/projects/:id"
-            element={
-              <ProtectedRoute>
-                <ProjectDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute>
-                <UsersPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/users/:id"
             element={
               <ProtectedRoute>
-                <UserDetailsPage />
+                <UserProfilePage />
               </ProtectedRoute>
             }
           />
@@ -111,7 +80,7 @@ function App() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <ProfilePage />
+                <UserProfilePage />
               </ProtectedRoute>
             }
           />

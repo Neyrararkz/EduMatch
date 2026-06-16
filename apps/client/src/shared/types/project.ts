@@ -27,4 +27,13 @@ export type CreateProjectInput = {
   title: string;
   description: string;
   deadline?: string;
+  requiredSkillIds?: string[];
+};
+
+export type UpdateProjectInput = {
+  title?: string;
+  description?: string;
+  status?: "open" | "in_progress" | "completed" | "closed";
+  deadline?: string;
+  requiredSkillIds?: string[];
 };

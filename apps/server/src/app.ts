@@ -12,6 +12,7 @@ import { usersRouter } from "./routes/users.router.js";
 import { projectsRouter } from "./routes/projects.router.js";
 import { AppError } from "./utils/app-error.js";
 import { skillsRouter } from "./routes/skills.router.js";
+import { applicationsRouter } from "./routes/applications.router.js";
 
 const notFoundHandler: RequestHandler = (_req, res) => {
   res.status(404).json({
@@ -53,6 +54,7 @@ export const createApp = (): Express => {
   app.use("/api/users", usersRouter);
   app.use("/api/projects", projectsRouter);
   app.use("/api/skills", skillsRouter);
+  app.use("/api/applications", applicationsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

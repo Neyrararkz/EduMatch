@@ -15,6 +15,8 @@ import {
   projectIdParamsSchema,
   updateProjectSchema,
 } from "../validators/project.validator.js";
+import { createProjectApplicationController } from "../controllers/applications.controller.js";
+import { createApplicationSchema } from "../validators/application.validator.js";
 
 export const projectsRouter: express.Router = express.Router();
 
@@ -23,6 +25,12 @@ projectsRouter.use(authMiddleware);
 projectsRouter.post("/", validate(createProjectSchema), createProjectController);
 projectsRouter.get("/", getProjectsController);
 projectsRouter.get("/my", getMyProjectsController);
+
+projectsRouter.post(
+  "/:id/applications",
+  validate(createApplicationSchema),
+  createProjectApplicationController
+);
 
 projectsRouter.get(
   "/:id",
