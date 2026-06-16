@@ -10,7 +10,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { ProjectDetailsPage } from "./pages/ProjectDetailsPage";
 import { CreateProjectPage } from "./pages/CreateProjectPage";
-import { ProfilePage } from "./pages/ProfilePage";
+import { ProfilePage } from "./pages/UserProfilePage";
 import { UsersPage } from "./pages/UsersPage";
 import { UserDetailsPage } from "./pages/UserDetailsPage";
 

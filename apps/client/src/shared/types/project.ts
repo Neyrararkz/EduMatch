@@ -1,0 +1,30 @@
+export type ProjectSkill = {
+  id: string;
+  name: string;
+};
+
+export type ProjectMember = {
+  id: string;
+  full_name: string;
+  email: string;
+  member_role: string;
+};
+
+export type Project = {
+  id: string;
+  creator_id: string;
+  title: string;
+  description: string;
+  status: string;
+  deadline: string | null;
+  created_at: string;
+  updated_at: string;
+  required_skills: ProjectSkill[];
+  members: ProjectMember[];
+};
+
+export type CreateProjectInput = {
+  title: string;
+  description: string;
+  deadline?: string;
+};
