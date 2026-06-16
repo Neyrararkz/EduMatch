@@ -15,6 +15,7 @@ export type ApplicationRecord = {
   project_creator_id?: string;
   applicant_full_name?: string;
   applicant_email?: string;
+  applicant_avatar_url?: string | null;
 };
 
 export type ProjectAccessRecord = {
@@ -154,7 +155,8 @@ export async function findIncomingApplications(
       p.title AS project_title,
       p.creator_id AS project_creator_id,
       u.full_name AS applicant_full_name,
-      u.email AS applicant_email
+      u.email AS applicant_email,
+      u.avatar_url AS applicant_avatar_url
     FROM project_applications pa
     JOIN projects p ON p.id = pa.project_id
     JOIN users u ON u.id = pa.applicant_id
@@ -183,7 +185,8 @@ export async function findApplicationById(
       p.title AS project_title,
       p.creator_id AS project_creator_id,
       u.full_name AS applicant_full_name,
-      u.email AS applicant_email
+      u.email AS applicant_email,
+      u.avatar_url AS applicant_avatar_url
     FROM project_applications pa
     JOIN projects p ON p.id = pa.project_id
     JOIN users u ON u.id = pa.applicant_id

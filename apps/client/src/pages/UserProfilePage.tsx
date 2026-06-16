@@ -9,6 +9,7 @@ import type { User } from "../shared/types/auth";
 import type { Project } from "../shared/types/project";
 import type { Skill, UpdateUserSkillInput, UserSkill } from "../shared/types/skill";
 import { ProjectDetailsModal } from "../features/projects/ProjectDetailsModal";
+import { UserAvatar } from "../shared/ui/UserAvatar";
 
 const skillLevelLabels = {
   beginner: "Начальный",
@@ -206,14 +207,7 @@ export function UserProfilePage() {
       <h1>{isMyProfile ? "Мой профиль" : `Профиль: ${profileUser.full_name}`}</h1>
 
       <section>
-        {profileUser.avatar_url && (
-          <img
-            src={profileUser.avatar_url}
-            alt={profileUser.full_name}
-            width="120"
-            height="120"
-          />
-        )}
+        <UserAvatar src={profileUser.avatar_url} name={profileUser.full_name} size="lg" />
 
         {!isEditing ? (
           <div>
@@ -358,7 +352,9 @@ export function UserProfilePage() {
           <ul>
             {participatingProjects.map((project) => (
               <li key={project.id}>
-                <Link to={`/projects/${project.id}`}>{project.title}</Link>
+                <button type="button" onClick={() => setSelectedProject(project)}>
+                  {project.title}
+                </button>
               </li>
             ))}
           </ul>

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../../app/AuthProvider";
+import { submitApplication } from "../../shared/api/applications";
 import { deleteProject } from "../../shared/api/projects";
 import type { Project } from "../../shared/types/project";
+import { UserAvatar } from "../../shared/ui/UserAvatar";
 import { ProjectFormModal } from "./ProjectFormModal";
 
 type ProjectDetailsModalProps = {
@@ -21,6 +24,7 @@ const statusLabels: Record<string, string> = {
 
 function formatDate(date: string | null) {
   if (!date) return "Не указан";
+
   return new Date(date).toLocaleDateString("ru-RU");
 }
 
@@ -35,13 +39,19 @@ export function ProjectDetailsModal({
   const [currentProject, setCurrentProject] = useState(project);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
+  const [applicationSent, setApplicationSent] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setCurrentProject(project);
+    setApplicationSent(false);
+    setError("");
+    setIsEditing(false);
   }, [project]);
 
   const isCreator = Boolean(user && user.id === currentProject.creator_id);
+
   const isMember = Boolean(
     user && currentProject.members.some((member) => member.id === user.id)
   );
@@ -63,6 +73,24 @@ export function ProjectDetailsModal({
       setError(error instanceof Error ? error.message : "Не удалось удалить проект");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleSubmitApplication() {
+    if (!accessToken || isCreator || isMember || applicationSent) return;
+
+    const message = prompt("Напишите короткое сообщение владельцу проекта") ?? "";
+
+    setError("");
+    setIsSubmittingApplication(true);
+
+    try {
+      await submitApplication(currentProject.id, message, accessToken);
+      setApplicationSent(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Не удалось отправить заявку");
+    } finally {
+      setIsSubmittingApplication(false);
     }
   }
 
@@ -122,7 +150,19 @@ export function ProjectDetailsModal({
             <ul>
               {currentProject.members.map((member) => (
                 <li key={member.id}>
-                  {member.full_name} — {member.member_role}
+                  <Link
+                    className="user-inline"
+                    to={member.id === user?.id ? "/profile" : `/users/${member.id}`}
+                    onClick={onClose}
+                  >
+                    <UserAvatar
+                      src={member.avatar_url}
+                      name={member.full_name}
+                      size="sm"
+                    />
+                    <span>{member.full_name}</span>
+                    <span>— {member.member_role}</span>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -145,8 +185,16 @@ export function ProjectDetailsModal({
           )}
 
           {!isCreator && !isMember && (
-            <button type="button" disabled>
-              Подать заявку
+            <button
+              type="button"
+              onClick={handleSubmitApplication}
+              disabled={isSubmittingApplication || applicationSent}
+            >
+              {applicationSent
+                ? "Заявка отправлена"
+                : isSubmittingApplication
+                  ? "Отправка..."
+                  : "Подать заявку"}
             </button>
           )}
 

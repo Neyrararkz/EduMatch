@@ -20,6 +20,7 @@ export type ProjectMember = {
   id: string;
   full_name: string;
   email: string;
+  avatar_url: string | null;
   member_role: string;
 };
 
@@ -67,6 +68,7 @@ async function getProjectMembers(projectId: string): Promise<ProjectMember[]> {
       u.id,
       u.full_name,
       u.email,
+      u.avatar_url,
       pm.member_role
     FROM project_members pm
     JOIN users u ON u.id = pm.user_id
