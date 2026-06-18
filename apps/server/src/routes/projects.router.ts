@@ -17,6 +17,7 @@ import {
 } from "../validators/project.validator.js";
 import { createProjectApplicationController } from "../controllers/applications.controller.js";
 import { createApplicationSchema } from "../validators/application.validator.js";
+import { getProjectMessagesController } from "../controllers/chat.controller.js";
 
 export const projectsRouter: express.Router = express.Router();
 
@@ -30,6 +31,12 @@ projectsRouter.post(
   "/:id/applications",
   validate(createApplicationSchema),
   createProjectApplicationController
+);
+
+projectsRouter.get(
+  "/:id/messages",
+  validate(projectIdParamsSchema),
+  getProjectMessagesController
 );
 
 projectsRouter.get(

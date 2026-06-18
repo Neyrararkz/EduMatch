@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../../app/AuthProvider";
-import { submitApplication } from "../../shared/api/applications";
+import { getMyApplications, submitApplication } from "../../shared/api/applications";
 import { deleteProject } from "../../shared/api/projects";
 import type { Project } from "../../shared/types/project";
 import { UserAvatar } from "../../shared/ui/UserAvatar";
 import { ProjectFormModal } from "./ProjectFormModal";
+import { ProjectChat } from "./ProjectChat";
 
 type ProjectDetailsModalProps = {
   project: Project;
@@ -40,21 +41,46 @@ export function ProjectDetailsModal({
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
-  const [applicationSent, setApplicationSent] = useState(false);
+  const [hasExistingApplication, setHasExistingApplication] = useState(false);
+  const [isCheckingApplication, setIsCheckingApplication] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    setCurrentProject(project);
-    setApplicationSent(false);
-    setError("");
-    setIsEditing(false);
-  }, [project]);
 
   const isCreator = Boolean(user && user.id === currentProject.creator_id);
 
   const isMember = Boolean(
     user && currentProject.members.some((member) => member.id === user.id)
   );
+
+  useEffect(() => {
+    setCurrentProject(project);
+    setError("");
+    setIsEditing(false);
+    setHasExistingApplication(false);
+  }, [project]);
+
+  useEffect(() => {
+    async function checkExistingApplication() {
+      if (!accessToken || isCreator || isMember) return;
+
+      setIsCheckingApplication(true);
+
+      try {
+        const response = await getMyApplications(accessToken);
+
+        const exists = response.applications.some(
+          (application) => application.project_id === currentProject.id
+        );
+
+        setHasExistingApplication(exists);
+      } catch {
+        setHasExistingApplication(false);
+      } finally {
+        setIsCheckingApplication(false);
+      }
+    }
+
+    checkExistingApplication();
+  }, [accessToken, currentProject.id, isCreator, isMember]);
 
   async function handleDelete() {
     if (!accessToken || !isCreator) return;
@@ -77,7 +103,15 @@ export function ProjectDetailsModal({
   }
 
   async function handleSubmitApplication() {
-    if (!accessToken || isCreator || isMember || applicationSent) return;
+    if (
+      !accessToken ||
+      isCreator ||
+      isMember ||
+      hasExistingApplication ||
+      isSubmittingApplication
+    ) {
+      return;
+    }
 
     const message = prompt("Напишите короткое сообщение владельцу проекта") ?? "";
 
@@ -86,9 +120,17 @@ export function ProjectDetailsModal({
 
     try {
       await submitApplication(currentProject.id, message, accessToken);
-      setApplicationSent(true);
+      setHasExistingApplication(true);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Не удалось отправить заявку");
+      const message = error instanceof Error ? error.message : "Не удалось отправить заявку";
+
+      if (message === "Application already exists") {
+        setHasExistingApplication(true);
+        setError("");
+        return;
+      }
+
+      setError(message);
     } finally {
       setIsSubmittingApplication(false);
     }
@@ -169,6 +211,8 @@ export function ProjectDetailsModal({
           )}
         </section>
 
+        {(isCreator || isMember) && <ProjectChat projectId={currentProject.id} />}
+
         {error && <p>{error}</p>}
 
         <div className="modal-actions">
@@ -188,13 +232,19 @@ export function ProjectDetailsModal({
             <button
               type="button"
               onClick={handleSubmitApplication}
-              disabled={isSubmittingApplication || applicationSent}
+              disabled={
+                isCheckingApplication ||
+                isSubmittingApplication ||
+                hasExistingApplication
+              }
             >
-              {applicationSent
-                ? "Заявка отправлена"
-                : isSubmittingApplication
-                  ? "Отправка..."
-                  : "Подать заявку"}
+              {isCheckingApplication
+                ? "Проверка..."
+                : hasExistingApplication
+                  ? "Заявка уже отправлена"
+                  : isSubmittingApplication
+                    ? "Отправка..."
+                    : "Подать заявку"}
             </button>
           )}
 
