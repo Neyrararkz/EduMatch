@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 
 import { useAuth } from "../app/AuthProvider";
+import { ProjectDetailsModal } from "../features/projects/ProjectDetailsModal";
 import { getProjects } from "../shared/api/projects";
 import { getMySkills, getSkills, getUserSkills, updateMySkills } from "../shared/api/skills";
-import { getUserById, updateMe } from "../shared/api/users";
+import { getUserById, updateMe, type UpdateProfileInput } from "../shared/api/users";
 import type { User } from "../shared/types/auth";
 import type { Project } from "../shared/types/project";
 import type { Skill, UpdateUserSkillInput, UserSkill } from "../shared/types/skill";
-import { ProjectDetailsModal } from "../features/projects/ProjectDetailsModal";
 import { UserAvatar } from "../shared/ui/UserAvatar";
 
 const skillLevelLabels = {
@@ -16,6 +16,22 @@ const skillLevelLabels = {
   intermediate: "Средний",
   advanced: "Продвинутый",
 } as const;
+
+const statusLabels: Record<string, string> = {
+  open: "Открыт",
+  in_progress: "В работе",
+  completed: "Завершён",
+  closed: "Закрыт",
+};
+
+function formatDate(date: string | null) {
+  if (!date) return "Без дедлайна";
+  return new Date(date).toLocaleDateString("ru-RU");
+}
+
+function getMainSkill(project: Project) {
+  return project.required_skills[0]?.name ?? "Без навыков";
+}
 
 export function UserProfilePage() {
   const { id } = useParams();
@@ -28,6 +44,7 @@ export function UserProfilePage() {
   const [skills, setSkills] = useState<UserSkill[]>([]);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
@@ -38,8 +55,6 @@ export function UserProfilePage() {
   const [about, setAbout] = useState("");
   const [university, setUniversity] = useState("");
   const [course, setCourse] = useState("");
-
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -105,13 +120,14 @@ export function UserProfilePage() {
 
     setError("");
 
-    const input = {
+    const input: UpdateProfileInput = {
       fullName,
-      avatarUrl: avatarUrl || undefined,
-      about: about || undefined,
-      university: university || undefined,
-      course: course ? Number(course) : undefined,
     };
+
+    if (avatarUrl) input.avatarUrl = avatarUrl;
+    if (about) input.about = about;
+    if (university) input.university = university;
+    if (course) input.course = Number(course);
 
     try {
       const response = await updateMe(input, accessToken);
@@ -190,6 +206,30 @@ export function UserProfilePage() {
     setSelectedProject(null);
   }
 
+  function renderProjectCard(project: Project) {
+    return (
+      <button
+        type="button"
+        className="profile-project-card"
+        onClick={() => setSelectedProject(project)}
+        key={project.id}
+      >
+        <div className="profile-project-card-header">
+          <h3>{project.title}</h3>
+          <span>{statusLabels[project.status] ?? project.status}</span>
+        </div>
+
+        <p>{project.description}</p>
+
+        <div className="profile-project-card-footer">
+          <span className="language-dot" />
+          <span>{getMainSkill(project)}</span>
+          <span>{formatDate(project.deadline)}</span>
+        </div>
+      </button>
+    );
+  }
+
   if (isLoading) {
     return <p>Загрузка профиля...</p>;
   }
@@ -203,163 +243,162 @@ export function UserProfilePage() {
   }
 
   return (
-    <section>
-      <h1>{isMyProfile ? "Мой профиль" : ``}</h1>
+    <section className="profile-page">
+      <div className="profile-layout">
+        <aside className="profile-sidebar-card">
+          <UserAvatar src={profileUser.avatar_url} name={profileUser.full_name} size="lg" />
 
-      <section>
-        <UserAvatar src={profileUser.avatar_url} name={profileUser.full_name} size="lg" />
+          {!isEditing ? (
+            <>
+              <h1>{profileUser.full_name}</h1>
+              <p>{profileUser.email}</p>
 
-        {!isEditing ? (
-          <div>
-            <h2>{profileUser.full_name}</h2>
-            <p>Email: {profileUser.email}</p>
-            <p>Учебное заведение: {profileUser.university ?? "Не указано"}</p>
-            <p>Курс: {profileUser.course ?? "Не указан"}</p>
-            <p>Рейтинг: {profileUser.rating ?? "0"}</p>
+              <div className="profile-facts">
+                <p>Учебное заведение: {profileUser.university ?? "Не указано"}</p>
+                <p>Курс: {profileUser.course ?? "Не указан"}</p>
+                <p>Рейтинг: {profileUser.rating ?? "0"}</p>
+              </div>
 
-            <h3>О себе</h3>
-            <p>{profileUser.about ?? "Пользователь пока ничего не рассказал о себе."}</p>
+              <div>
+                <h3>О себе</h3>
+                <p>{profileUser.about ?? "Пользователь пока ничего не рассказал о себе."}</p>
+              </div>
 
-            {isMyProfile && (
-              <button type="button" onClick={() => setIsEditing(true)}>
-                Редактировать профиль
+              {isMyProfile && (
+                <button type="button" onClick={() => setIsEditing(true)}>
+                  Редактировать профиль
+                </button>
+              )}
+            </>
+          ) : (
+            <form onSubmit={handleProfileSubmit}>
+              <div>
+                <label>Имя</label>
+                <input value={fullName} onChange={(event) => setFullName(event.target.value)} />
+              </div>
+
+              <div>
+                <label>Ссылка на аватар</label>
+                <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} />
+              </div>
+
+              <div>
+                <label>Учебное заведение</label>
+                <input
+                  value={university}
+                  onChange={(event) => setUniversity(event.target.value)}
+                />
+              </div>
+
+              <div>
+                <label>Курс</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={course}
+                  onChange={(event) => setCourse(event.target.value)}
+                />
+              </div>
+
+              <div>
+                <label>О себе</label>
+                <textarea value={about} onChange={(event) => setAbout(event.target.value)} />
+              </div>
+
+              <button type="submit">Сохранить</button>
+              <button type="button" onClick={() => setIsEditing(false)}>
+                Отмена
               </button>
+            </form>
+          )}
+        </aside>
+
+        <div className="profile-main">
+          <section className="profile-section-card">
+            <h2>Навыки</h2>
+
+            {skills.length === 0 ? (
+              <p>Навыки пока не указаны.</p>
+            ) : (
+              <div className="skills-grid">
+                {skills.map((skill) => (
+                  <div className="profile-skill-chip" key={skill.id}>
+                    <span>{skill.name} — {skillLevelLabels[skill.level]}</span>
+
+                    {isMyProfile && isEditing && (
+                      <select
+                        value={skill.level}
+                        onChange={(event) =>
+                          handleSkillLevelChange(
+                            skill.id,
+                            event.target.value as "beginner" | "intermediate" | "advanced"
+                          )
+                        }
+                      >
+                        <option value="beginner">Начальный</option>
+                        <option value="intermediate">Средний</option>
+                        <option value="advanced">Продвинутый</option>
+                      </select>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
-        ) : (
-          <form onSubmit={handleProfileSubmit}>
-            <div>
-              <label>Имя</label>
-              <input value={fullName} onChange={(event) => setFullName(event.target.value)} />
+
+            {isMyProfile && isEditing && (
+              <div className="profile-all-skills">
+                <h3>Добавить или убрать навыки</h3>
+
+                <div className="skills-grid">
+                  {allSkills.map((skill) => {
+                    const checked = skills.some((userSkill) => userSkill.id === skill.id);
+
+                    return (
+                      <label key={skill.id} className="skill-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => handleSkillToggle(skill.id)}
+                        />
+                        {skill.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section className="profile-section-card">
+            <h2>Проекты пользователя</h2>
+
+            <div className="profile-project-group">
+              <h3>Созданные проекты</h3>
+
+              {createdProjects.length === 0 ? (
+                <p>Пользователь пока не создал проектов.</p>
+              ) : (
+                <div className="profile-project-grid">
+                  {createdProjects.map((project) => renderProjectCard(project))}
+                </div>
+              )}
             </div>
 
-            <div>
-              <label>Ссылка на аватар</label>
-              <input
-                value={avatarUrl}
-                onChange={(event) => setAvatarUrl(event.target.value)}
-              />
+            <div className="profile-project-group">
+              <h3>Участвует в проектах</h3>
+
+              {participatingProjects.length === 0 ? (
+                <p>Пользователь пока не участвует в проектах.</p>
+              ) : (
+                <div className="profile-project-grid">
+                  {participatingProjects.map((project) => renderProjectCard(project))}
+                </div>
+              )}
             </div>
+          </section>
+        </div>
+      </div>
 
-            <div>
-              <label>Учебное заведение</label>
-              <input
-                value={university}
-                onChange={(event) => setUniversity(event.target.value)}
-              />
-            </div>
-
-            <div>
-              <label>Курс</label>
-              <input
-                type="number"
-                min="1"
-                value={course}
-                onChange={(event) => setCourse(event.target.value)}
-              />
-            </div>
-
-            <div>
-              <label>О себе</label>
-              <textarea value={about} onChange={(event) => setAbout(event.target.value)} />
-            </div>
-
-            <button type="submit">Сохранить</button>
-            <button type="button" onClick={() => setIsEditing(false)}>
-              Отмена
-            </button>
-          </form>
-        )}
-      </section>
-
-      <section>
-        <h2>Навыки</h2>
-
-        {skills.length === 0 ? (
-          <p>Навыки пока не указаны.</p>
-        ) : (
-          <ul>
-            {skills.map((skill) => (
-              <li key={skill.id}>
-                {skill.name} — {skillLevelLabels[skill.level]}
-
-                {isMyProfile && (
-                  <select
-                    value={skill.level}
-                    onChange={(event) =>
-                      handleSkillLevelChange(
-                        skill.id,
-                        event.target.value as "beginner" | "intermediate" | "advanced"
-                      )
-                    }
-                  >
-                    <option value="beginner">Начальный</option>
-                    <option value="intermediate">Средний</option>
-                    <option value="advanced">Продвинутый</option>
-                  </select>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {isMyProfile && (
-          <div>
-            <h3>Добавить или убрать навыки</h3>
-
-            {allSkills.map((skill) => {
-              const checked = skills.some((userSkill) => userSkill.id === skill.id);
-
-              return (
-                <label key={skill.id}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => handleSkillToggle(skill.id)}
-                  />
-                  {skill.name}
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2>Проекты пользователя</h2>
-
-        <h3>Созданные проекты</h3>
-
-        {createdProjects.length === 0 ? (
-          <p>Пользователь пока не создал проектов.</p>
-        ) : (
-          <ul>
-            {createdProjects.map((project) => (
-              <li key={project.id}>
-                <button type="button" onClick={() => setSelectedProject(project)}>
-                  {project.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <h3>Участвует в проектах</h3>
-
-        {participatingProjects.length === 0 ? (
-          <p>Пользователь пока не участвует в проектах.</p>
-        ) : (
-          <ul>
-            {participatingProjects.map((project) => (
-              <li key={project.id}>
-                <button type="button" onClick={() => setSelectedProject(project)}>
-                  {project.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
       {selectedProject && (
         <ProjectDetailsModal
           project={selectedProject}

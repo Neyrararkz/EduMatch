@@ -90,7 +90,7 @@ export function UsersPage() {
     <section>
       <h1>Тиммейты</h1>
 
-      <div>
+      <div className="page-controls">
         <input
           placeholder="Поиск по имени, email, учебному заведению или описанию"
           value={search}
@@ -116,44 +116,46 @@ export function UsersPage() {
       {filteredUsers.length === 0 ? (
         <p>Пользователи не найдены.</p>
       ) : (
-        <div>
+        <div className="cards-list">
           {filteredUsers.map((user) => {
             const profilePath =
               user.id === currentUser?.id ? "/profile" : `/users/${user.id}`;
 
             return (
-              <article key={user.id}>
-                <div className="application-header">
-                  <UserAvatar
-                    src={user.avatar_url}
-                    name={user.full_name}
-                    size="md"
-                  />
+              <Link className="teammate-card" to={profilePath} key={user.id}>
+                <article>
+                  <div className="teammate-header">
+                    <UserAvatar
+                      src={user.avatar_url}
+                      name={user.full_name}
+                      size="md"
+                    />
 
-                  <div>
-                    <h2>{user.full_name}</h2>
-                    <p>{user.email}</p>
+                    <div>
+                      <h2>{user.full_name}</h2>
+                      <p>{user.email}</p>
+                    </div>
                   </div>
-                </div>
 
-                <p>Учебное заведение: {user.university ?? "Не указано"}</p>
-                <p>Курс: {user.course ?? "Не указан"}</p>
-                <p>{user.about ?? "Пользователь пока ничего не рассказал о себе."}</p>
+                  <div className="teammate-info">
+                    <p>Учебное заведение: {user.university ?? "Не указано"}</p>
+                    <p>Курс: {user.course ?? "Не указан"}</p>
+                    <p>{user.about ?? "Пользователь пока ничего не рассказал о себе."}</p>
+                  </div>
 
-                <div className="skills-grid">
-                  {user.skills.length === 0 ? (
-                    <span className="skill-checkbox">Навыки не указаны</span>
-                  ) : (
-                    user.skills.map((skill) => (
-                      <span className="skill-checkbox" key={skill.id}>
-                        {skill.name} — {skillLevelLabels[skill.level]}
-                      </span>
-                    ))
-                  )}
-                </div>
-
-                <Link to={profilePath}>Открыть профиль</Link>
-              </article>
+                  <div className="skills-grid">
+                    {user.skills.length === 0 ? (
+                      <span className="skill-checkbox">Навыки не указаны</span>
+                    ) : (
+                      user.skills.map((skill) => (
+                        <span className="skill-checkbox" key={skill.id}>
+                          {skill.name} — {skillLevelLabels[skill.level]}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </article>
+              </Link>
             );
           })}
         </div>

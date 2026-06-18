@@ -89,8 +89,8 @@ export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormMod
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal">
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(event) => event.stopPropagation()}>
         <button className="modal-close" type="button" onClick={onClose}>
           ← Назад
         </button>

@@ -90,7 +90,7 @@ export function ProjectsPage() {
       <h1>Проекты</h1>
 
       <button type="button" onClick={() => setIsCreateOpen(true)}>
-        Создать проект
+        + Создать проект 
       </button>
 
       <div>

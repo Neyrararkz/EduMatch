@@ -150,8 +150,8 @@ export function ProjectDetailsModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal">
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(event) => event.stopPropagation()}>
         <button className="modal-close" type="button" onClick={onClose}>
           ← Назад
         </button>
@@ -247,8 +247,6 @@ export function ProjectDetailsModal({
                     : "Подать заявку"}
             </button>
           )}
-
-          {!isCreator && isMember && <p>Вы участвуете в этом проекте.</p>}
         </div>
       </div>
     </div>

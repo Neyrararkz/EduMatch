@@ -69,8 +69,8 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
     socketRef.current = socket;
 
     socket.addEventListener("open", () => {
-        setIsConnected(true);
-        setError("");
+      setIsConnected(true);
+      setError("");
     });
 
     socket.addEventListener("close", () => {
@@ -90,7 +90,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
     });
 
     socket.addEventListener("error", () => {
-        setIsConnected(false);
+      setIsConnected(false);
     });
 
     return () => {
@@ -143,7 +143,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
 
             return (
               <div
-                className={`chat-message ${isMyMessage ? "chat-message-own" : ""}`}
+                className={`chat-row ${isMyMessage ? "chat-row-own" : ""}`}
                 key={message.id}
               >
                 <UserAvatar
@@ -152,7 +152,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
                   size="sm"
                 />
 
-                <div>
+                <div className="chat-bubble">
                   <div className="chat-message-header">
                     <strong>{message.sender_full_name}</strong>
                     <span>{formatTime(message.created_at)}</span>
