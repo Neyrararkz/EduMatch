@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Links, useParams } from "react-router-dom";
 
 import { useAuth } from "../app/AuthProvider";
 import { getProjects } from "../shared/api/projects";
@@ -204,7 +204,7 @@ export function UserProfilePage() {
 
   return (
     <section>
-      <h1>{isMyProfile ? "Мой профиль" : `Профиль: ${profileUser.full_name}`}</h1>
+      <h1>{isMyProfile ? "Мой профиль" : ``}</h1>
 
       <section>
         <UserAvatar src={profileUser.avatar_url} name={profileUser.full_name} size="lg" />

@@ -10,6 +10,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
+import { UsersPage } from "./pages/UsersPage";
 
 function Navigation() {
   const { isAuthenticated, logout } = useAuth();
@@ -22,6 +23,7 @@ function Navigation() {
         <>
           <Link to="/dashboard">Dashboard</Link> |{" "}
           <Link to="/projects">Проекты</Link> |{" "}
+          <Link to="/users">Тиммейты</Link> |{" "}
           <Link to="/profile">Профиль</Link> |{" "}
           <Link to="/applications">Заявки</Link> |{" "}
           <button type="button" onClick={logout}>
@@ -63,6 +65,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProjectsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <UsersPage />
               </ProtectedRoute>
             }
           />
