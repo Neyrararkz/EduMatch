@@ -125,17 +125,15 @@ textarea {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
   padding: 6px 8px;
   font-weight: 600;
   font-size: 15px;
 }
 
-.brand-mark {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: #ffffff;
+.brand-logo {
+  width: 24px;
+  height: 24px;
 }
 
 .brand-text {

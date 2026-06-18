@@ -36,7 +36,7 @@ export function Layout({ children }: LayoutProps) {
       <aside className="sidebar">
         <div className="sidebar-top">
           <Link to="/projects" className="brand">
-            <span className="brand-mark" />
+            <img src="favicon.png" alt="logo" className="brand-logo"/>
             <span className="brand-text">EduMatch</span>
           </Link>
 
