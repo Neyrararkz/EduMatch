@@ -15,6 +15,12 @@ import {
   type LoginInput,
   type RegisterInput,
 } from "../shared/api/auth";
+import {
+  clearStoredTokens,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  setStoredTokens,
+} from "../shared/api/token-storage";
 import type { User } from "../shared/types/auth";
 
 type AuthContextValue = {
@@ -29,29 +35,28 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const ACCESS_TOKEN_KEY = "edumatch_access_token";
-const REFRESH_TOKEN_KEY = "edumatch_refresh_token";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(() =>
-    localStorage.getItem(ACCESS_TOKEN_KEY)
+    getStoredAccessToken()
   );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadCurrentUser() {
-      if (!accessToken) {
+      const storedAccessToken = getStoredAccessToken();
+
+      if (!storedAccessToken) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const response = await getMe(accessToken);
+        const response = await getMe(storedAccessToken);
         setUser(response.user);
+        setAccessToken(getStoredAccessToken());
       } catch {
-        localStorage.removeItem(ACCESS_TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        clearStoredTokens();
         setAccessToken(null);
         setUser(null);
       } finally {
@@ -65,8 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(input: LoginInput) {
     const response = await loginRequest(input);
 
-    localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+    setStoredTokens(response.accessToken, response.refreshToken);
 
     setAccessToken(response.accessToken);
     setUser(response.user);
@@ -75,25 +79,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function register(input: RegisterInput) {
     const response = await registerRequest(input);
 
-    localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+    setStoredTokens(response.accessToken, response.refreshToken);
 
     setAccessToken(response.accessToken);
     setUser(response.user);
   }
 
   async function logout() {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    const refreshToken = getStoredRefreshToken();
 
-    if (refreshToken) {
-      await logoutRequest(refreshToken);
+    try {
+      if (refreshToken) {
+        await logoutRequest(refreshToken);
+      }
+    } finally {
+      clearStoredTokens();
+      setAccessToken(null);
+      setUser(null);
     }
-
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-
-    setAccessToken(null);
-    setUser(null);
   }
 
   const value = useMemo<AuthContextValue>(

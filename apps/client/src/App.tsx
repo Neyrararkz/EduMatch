@@ -6,34 +6,31 @@ import { useAuth } from "./app/AuthProvider";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
-import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import { UsersPage } from "./pages/UsersPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
-import { UsersPage } from "./pages/UsersPage";
 
 function Navigation() {
   const { isAuthenticated, logout } = useAuth();
 
   return (
     <nav>
-      <Link to="/">Home</Link> |{" "}
-
       {isAuthenticated ? (
         <>
-          <Link to="/dashboard">Dashboard</Link> |{" "}
           <Link to="/projects">Проекты</Link> |{" "}
           <Link to="/users">Тиммейты</Link> |{" "}
           <Link to="/profile">Профиль</Link> |{" "}
           <Link to="/applications">Заявки</Link> |{" "}
           <button type="button" onClick={logout}>
-            Logout
+            Выйти
           </button>
         </>
       ) : (
         <>
-          <Link to="/login">Login</Link> |{" "}
-          <Link to="/register">Register</Link>
+      <Link to="/">Главная</Link> |{" "}
+          <Link to="/login">Войти</Link> |{" "}
+          <Link to="/register">Регистрация</Link>
         </>
       )}
     </nav>
@@ -50,15 +47,6 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/projects"

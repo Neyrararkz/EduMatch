@@ -27,7 +27,7 @@ export function RegisterPage() {
         course: Number(course),
       });
 
-      navigate("/dashboard");
+      navigate("/projects");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Registration failed");
     }
