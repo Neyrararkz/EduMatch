@@ -12,14 +12,14 @@ const navItems = [
   { to: "/applications", label: "Заявки" },
 ];
 
-function getPageTitle(pathname: string) {
-  if (pathname.startsWith("/projects")) return "Проекты";
-  if (pathname === "/users") return "Тиммейты";
-  if (pathname.startsWith("/users/")) return "Профиль";
-  if (pathname.startsWith("/applications")) return "Заявки";
-  if (pathname.startsWith("/profile")) return "Профиль";
-  return "EduMatch";
-}
+// function getPageTitle(pathname: string) {
+//   if (pathname.startsWith("/projects")) return "Проекты";
+//   if (pathname === "/users") return "Тиммейты";
+//   if (pathname.startsWith("/users/")) return "Профиль";
+//   if (pathname.startsWith("/applications")) return "Заявки";
+//   if (pathname.startsWith("/profile")) return "Профиль";
+//   return "EduMatch";
+// }
 
 export function Layout({ children }: LayoutProps) {
   const { pathname } = useLocation();

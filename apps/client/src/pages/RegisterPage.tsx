@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../app/AuthProvider";
 
@@ -29,63 +29,73 @@ export function RegisterPage() {
 
       navigate("/projects");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Registration failed");
+      setError(error instanceof Error ? error.message : "Не удалось зарегистрироваться");
     }
   }
 
   return (
-    <section>
-      <h1>Register</h1>
+    <main className="public-page auth-page">
+      <section className="auth-card">
+        <h1>Регистрация</h1>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Full name</label>
-          <input
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label>Имя</label>
+            <input
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              placeholder="Ваше имя"
+            />
+          </div>
 
-        <div>
-          <label>Email</label>
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-          />
-        </div>
+          <div>
+            <label>Email</label>
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              type="email"
+              placeholder="you@example.com"
+            />
+          </div>
 
-        <div>
-          <label>Password</label>
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-          />
-        </div>
+          <div>
+            <label>Пароль</label>
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              placeholder="Минимум 6 символов"
+            />
+          </div>
 
-        <div>
-          <label>University</label>
-          <input
-            value={university}
-            onChange={(event) => setUniversity(event.target.value)}
-          />
-        </div>
+          <div>
+            <label>Учебное заведение</label>
+            <input
+              value={university}
+              onChange={(event) => setUniversity(event.target.value)}
+              placeholder="Например, IT Step Academy"
+            />
+          </div>
 
-        <div>
-          <label>Course</label>
-          <input
-            value={course}
-            onChange={(event) => setCourse(event.target.value)}
-            type="number"
-            min="1"
-          />
-        </div>
+          <div>
+            <label>Курс</label>
+            <input
+              value={course}
+              onChange={(event) => setCourse(event.target.value)}
+              type="number"
+              min="1"
+            />
+          </div>
 
-        {error && <p>{error}</p>}
+          {error && <p className="form-error">{error}</p>}
 
-        <button type="submit">Create account</button>
-      </form>
-    </section>
+          <button type="submit">Зарегистрироваться</button>
+        </form>
+
+        <p className="auth-switch">
+          Уже есть аккаунт? <Link to="/login">Войти</Link>
+        </p>
+      </section>
+    </main>
   );
 }
