@@ -66,7 +66,7 @@ export function Layout({ children }: LayoutProps) {
 
       <div className="app-main">
         <header className="topbar">
-          <h1 className="topbar-title">{getPageTitle(pathname)}</h1>
+          <h1 className="topbar-title"> </h1>
 
           <button
             type="button"

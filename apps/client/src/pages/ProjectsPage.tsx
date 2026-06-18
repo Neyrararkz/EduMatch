@@ -100,9 +100,9 @@ export function ProjectsPage() {
           onChange={(event) => setSearch(event.target.value)}
         />
 
-        <select value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="all">Все статусы</option>
-          <option value="open">Открыт</option>
+        <select value={status} onChange={(event) => setStatus(event.target.value)} className="pointer">
+          <option value="all" className="option">Все статусы</option>
+          <option value="open"className="option">Открыт</option>
           <option value="in_progress">В работе</option>
           <option value="completed">Завершён</option>
           <option value="closed">Закрыт</option>
@@ -116,17 +116,34 @@ export function ProjectsPage() {
       ) : (
         <div>
           {filteredProjects.map((project) => (
-            <article key={project.id}>
-              <h2>{project.title}</h2>
-              <p>{project.description}</p>
-              <p>Статус: {statusLabels[project.status] ?? project.status}</p>
-              <p>Дедлайн: {formatDate(project.deadline)}</p>
-              <p>Участников: {project.members.length}</p>
+            <button
+              type="button"
+              className="project-card"
+              key={project.id}
+              onClick={() => setSelectedProject(project)}
+            >
+              <div className="project-card-header">
+                <h2>{project.title}</h2>
+                <span>{statusLabels[project.status] ?? project.status}</span>
+              </div>
 
-              <button type="button" onClick={() => setSelectedProject(project)}>
-                Открыть проект
-              </button>
-            </article>
+              <p>{project.description}</p>
+
+              <div className="project-card-meta">
+                <span>Дедлайн: {formatDate(project.deadline)}</span>
+                <span>Участников: {project.members.length}</span>
+              </div>
+
+              {project.required_skills.length > 0 && (
+                <div className="skills-grid">
+                  {project.required_skills.map((skill) => (
+                    <span className="skill-checkbox" key={skill.id}>
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </button>
           ))}
         </div>
       )}

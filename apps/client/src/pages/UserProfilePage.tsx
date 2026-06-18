@@ -33,6 +33,24 @@ function getMainSkill(project: Project) {
   return project.required_skills[0]?.name ?? "Без навыков";
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Не удалось прочитать файл"));
+    };
+
+    reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function UserProfilePage() {
   const { id } = useParams();
   const { user: currentUser, accessToken } = useAuth();
@@ -135,6 +153,27 @@ export function UserProfilePage() {
       setIsEditing(false);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Не удалось обновить профиль");
+    }
+  }
+
+  async function handleAvatarFileChange(file: File | null) {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Можно загрузить только изображение");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Размер изображения не должен превышать 2 МБ");
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setAvatarUrl(dataUrl);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Не удалось загрузить аватар");
     }
   }
 
@@ -273,14 +312,22 @@ export function UserProfilePage() {
           ) : (
             <form onSubmit={handleProfileSubmit}>
               <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleAvatarFileChange(event.target.files?.[0] ?? null)}
+                />
+
+                {avatarUrl && (
+                  <button type="button" onClick={() => setAvatarUrl("")}>
+                    Удалить аватар
+                  </button>
+                )}
+              </div>
+              <div>
                 <label>Имя</label>
                 <input value={fullName} onChange={(event) => setFullName(event.target.value)} />
-              </div>
-
-              <div>
-                <label>Ссылка на аватар</label>
-                <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} />
-              </div>
+              </div>              
 
               <div>
                 <label>Учебное заведение</label>
