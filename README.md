@@ -335,53 +335,14 @@ ws://localhost:3000/ws?projectId={projectId}&token={accessToken}
 
 ## Документация
 
-* [Architecture](docs/diagrams/Architecture-Scheme.png)
-* [ERD](docs/diagrams/ERD.png)
-* [User Flow](docs/diagrams/User-Flow.png)
+* [ERD](docs/ERD.png)
+* [User Flow](docs/User-Flow.png)
+* [User Flow](docs/Competitor-Analysis.png)
 * [Figma](docs/figma-link.md)
-* [Postman collection](docs/postman/EduMatch.postman_collection.json)
 * [SQL schema](database/schema.sql)
 * [Demo seed](database/seed_demo.sql)
 
 ## Скриншоты
-
-<!-- Скриншоты интерфейса можно вставить сюда -->
-
-## Деплой
-
-Frontend:
-
-```txt
-Vercel
-```
-
-Backend:
-
-```txt
-Render / Railway
-```
-
-Database:
-
-```txt
-Neon PostgreSQL
-```
-
-Redis:
-
-```txt
-Upstash Redis
-```
-
-## Статус проекта
-
-```txt
-MVP реализован.
-Основной функционал по ТЗ закрыт.
-Проект готов к финальному тестированию, деплою и защите.
-```
-
-## Скриншоты интерфейса
 
 ### Projects
 
@@ -426,3 +387,38 @@ MVP реализован.
 ### Register
 
 ![Register](docs/Screenshots/Register.PNG)
+
+
+## Деплой
+
+Frontend:
+
+```txt
+Vercel
+```
+
+Backend:
+
+```txt
+Render / Railway
+```
+
+Database:
+
+```txt
+Neon PostgreSQL
+```
+
+Redis:
+
+```txt
+Upstash Redis
+```
+
+## Статус проекта
+
+```txt
+MVP реализован.
+Основной функционал по ТЗ закрыт.
+Проект готов к финальному тестированию, деплою и защите.
+```
