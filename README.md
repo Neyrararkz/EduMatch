@@ -3,6 +3,24 @@
 Full-stack web-платформа для поиска студенческих проектов, тиммейтов и командной работы.
 Сервис помогает студентам создавать проекты, находить участников по навыкам, подавать заявки в команды и общаться в проектных чатах.
 
+## Деплой
+
+| Компонент | Платформа       | Ссылка                                            |
+| --------- | --------------- | ------------------------------------------------- |
+| Frontend  | Vercel          | [Открыть сайт](https://edumatch-tawny.vercel.app) |
+| Backend   | Render          | [API](https://edumatch-bilh.onrender.com)         |
+| Database  | Neon PostgreSQL | Cloud database                                    |
+| Redis     | Upstash Redis   | Cloud Redis                                       |
+
+Backend health check:
+
+```txt
+https://edumatch-bilh.onrender.com/api/health
+```
+
+> Backend размещён на бесплатном тарифе Render, поэтому после периода неактивности первый запрос может выполняться дольше обычного.
+
+
 ## Стек
 
 | Слой          | Технологии                                     |
@@ -337,7 +355,7 @@ ws://localhost:3000/ws?projectId={projectId}&token={accessToken}
 
 * [ERD](docs/ERD.png)
 * [User Flow](docs/User-Flow.png)
-* [User Flow](docs/Competitor-Analysis.png)
+* [Competitor Analysis](docs/Competitor-Analysis.png)
 * [Figma](docs/figma-link.md)
 * [SQL schema](database/schema.sql)
 * [Demo seed](database/seed_demo.sql)
@@ -388,37 +406,3 @@ ws://localhost:3000/ws?projectId={projectId}&token={accessToken}
 
 ![Register](docs/Screenshots/Register.PNG)
 
-
-## Деплой
-
-Frontend:
-
-```txt
-Vercel
-```
-
-Backend:
-
-```txt
-Render / Railway
-```
-
-Database:
-
-```txt
-Neon PostgreSQL
-```
-
-Redis:
-
-```txt
-Upstash Redis
-```
-
-## Статус проекта
-
-```txt
-MVP реализован.
-Основной функционал по ТЗ закрыт.
-Проект готов к финальному тестированию, деплою и защите.
-```
