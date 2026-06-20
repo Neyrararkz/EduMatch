@@ -24,9 +24,27 @@ export type ProjectMember = {
   member_role: string;
 };
 
+export type ProjectFile = {
+  id: string;
+  project_id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  file_data: string;
+  created_at: Date;
+};
+
+export type ProjectFileInput = {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileData: string;
+};
+
 export type ProjectDetails = ProjectRecord & {
   required_skills: ProjectSkill[];
   members: ProjectMember[];
+  files: ProjectFile[];
 };
 
 export type CreateProjectInput = {
@@ -35,6 +53,7 @@ export type CreateProjectInput = {
   description: string;
   deadline?: string | undefined;
   requiredSkillIds?: string[] | undefined;
+  files?: ProjectFileInput[] | undefined;
 };
 
 export type UpdateProjectInput = {
@@ -81,18 +100,41 @@ async function getProjectMembers(projectId: string): Promise<ProjectMember[]> {
   return result.rows;
 }
 
+async function getProjectFiles(projectId: string): Promise<ProjectFile[]> {
+  const result = await db.query<ProjectFile>(
+    `
+    SELECT
+      id,
+      project_id,
+      file_name,
+      file_type,
+      file_size,
+      file_data,
+      created_at
+    FROM project_files
+    WHERE project_id = $1
+    ORDER BY created_at DESC
+    `,
+    [projectId]
+  );
+
+  return result.rows;
+}
+
 async function attachProjectDetails(
   project: ProjectRecord
 ): Promise<ProjectDetails> {
-  const [requiredSkills, members] = await Promise.all([
+  const [requiredSkills, members, files] = await Promise.all([
     getProjectSkills(project.id),
     getProjectMembers(project.id),
+    getProjectFiles(project.id),
   ]);
 
   return {
     ...project,
     required_skills: requiredSkills,
     members,
+    files,
   };
 }
 
@@ -243,6 +285,30 @@ export async function createProject(
           ON CONFLICT DO NOTHING
           `,
           [project.id, skillId]
+        );
+      }
+    }
+
+    if (input.files && input.files.length > 0) {
+      for (const file of input.files) {
+        await client.query(
+          `
+          INSERT INTO project_files (
+            project_id,
+            file_name,
+            file_type,
+            file_size,
+            file_data
+          )
+          VALUES ($1, $2, $3, $4, $5)
+          `,
+          [
+            project.id,
+            file.fileName,
+            file.fileType,
+            file.fileSize,
+            file.fileData,
+          ]
         );
       }
     }

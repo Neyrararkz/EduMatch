@@ -8,6 +8,10 @@ import type { Project } from "../../shared/types/project";
 import { UserAvatar } from "../../shared/ui/UserAvatar";
 import { ProjectFormModal } from "./ProjectFormModal";
 import { ProjectChat } from "./ProjectChat";
+import {
+  markProjectChatAsRead,
+  requestNotificationsRefresh,
+} from "../../shared/api/notifications";
 
 type ProjectDetailsModalProps = {
   project: Project;
@@ -27,6 +31,12 @@ function formatDate(date: string | null) {
   if (!date) return "Не указан";
 
   return new Date(date).toLocaleDateString("ru-RU");
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} Б`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} КБ`;
+  return `${(size / 1024 / 1024).toFixed(1)} МБ`;
 }
 
 export function ProjectDetailsModal({
@@ -50,6 +60,30 @@ export function ProjectDetailsModal({
   const isMember = Boolean(
     user && currentProject.members.some((member) => member.id === user.id)
   );
+
+  useEffect(() => {
+    if (!accessToken || (!isCreator && !isMember)) return;
+
+    const token = accessToken;
+    const projectId = currentProject.id;
+
+    async function markAsRead() {
+      try {
+        await markProjectChatAsRead(projectId, token);
+        requestNotificationsRefresh();
+      } catch {
+        return;
+      }
+    }
+
+    markAsRead();
+
+    const intervalId = window.setInterval(markAsRead, 8000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [accessToken, currentProject.id, isCreator, isMember]);
 
   useEffect(() => {
     setCurrentProject(project);
@@ -184,6 +218,28 @@ export function ProjectDetailsModal({
         </section>
 
         <section>
+          <h3>Файлы проекта</h3>
+
+          {currentProject.files.length === 0 ? (
+            <p>Файлы не прикреплены.</p>
+          ) : (
+            <div className="project-files-list">
+              {currentProject.files.map((file) => (
+                <a
+                  className="project-file-link"
+                  key={file.id}
+                  href={file.file_data}
+                  download={file.file_name}
+                >
+                  <span>{file.file_name}</span>
+                  <span>{formatFileSize(file.file_size)}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
           <h3>Участники</h3>
 
           {currentProject.members.length === 0 ? (
@@ -213,7 +269,7 @@ export function ProjectDetailsModal({
 
         {(isCreator || isMember) && <ProjectChat projectId={currentProject.id} />}
 
-        {error && <p>{error}</p>}
+        {error && <p className="form-error">{error}</p>}
 
         <div className="modal-actions">
           {isCreator && (

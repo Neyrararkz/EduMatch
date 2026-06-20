@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "../../app/AuthProvider";
 import { createProject, updateProject } from "../../shared/api/projects";
 import { getSkills } from "../../shared/api/skills";
-import type { Project } from "../../shared/types/project";
+import type { Project, ProjectFileInput } from "../../shared/types/project";
 import type { Skill } from "../../shared/types/skill";
 
 type ProjectFormModalProps = {
@@ -11,6 +11,30 @@ type ProjectFormModalProps = {
   onClose: () => void;
   onSuccess: (project: Project) => void;
 };
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Не удалось прочитать файл"));
+    };
+
+    reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} Б`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} КБ`;
+  return `${(size / 1024 / 1024).toFixed(1)} МБ`;
+}
 
 export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormModalProps) {
   const { accessToken } = useAuth();
@@ -25,6 +49,7 @@ export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormMod
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(
     project?.required_skills.map((skill) => skill.id) ?? []
   );
+  const [files, setFiles] = useState<ProjectFileInput[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -49,6 +74,44 @@ export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormMod
         ? current.filter((id) => id !== skillId)
         : [...current, skillId]
     );
+  }
+
+  async function handleFilesChange(selectedFiles: FileList | null) {
+    if (!selectedFiles) return;
+
+    const nextFiles = Array.from(selectedFiles);
+
+    if (nextFiles.length > 3) {
+      setError("Можно загрузить не больше 3 файлов");
+      return;
+    }
+
+    const tooLargeFile = nextFiles.find((file) => file.size > 2 * 1024 * 1024);
+
+    if (tooLargeFile) {
+      setError("Размер одного файла не должен превышать 2 МБ");
+      return;
+    }
+
+    try {
+      const preparedFiles = await Promise.all(
+        nextFiles.map(async (file) => ({
+          fileName: file.name,
+          fileType: file.type || "application/octet-stream",
+          fileSize: file.size,
+          fileData: await fileToDataUrl(file),
+        }))
+      );
+
+      setFiles(preparedFiles);
+      setError("");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Не удалось загрузить файлы");
+    }
+  }
+
+  function removeFile(fileName: string) {
+    setFiles((current) => current.filter((file) => file.fileName !== fileName));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -77,7 +140,13 @@ export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormMod
               },
               accessToken
             )
-          : await createProject(input, accessToken);
+          : await createProject(
+              {
+                ...input,
+                files,
+              },
+              accessToken
+            );
 
       onSuccess(response.project);
       onClose();
@@ -132,6 +201,34 @@ export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormMod
             </div>
           )}
 
+          {!isEditing && (
+            <div>
+              <label>Файлы проекта</label>
+
+              <input
+                type="file"
+                multiple
+                onChange={(event) => handleFilesChange(event.target.files)}
+              />
+
+              {files.length > 0 && (
+                <div className="project-files-list">
+                  {files.map((file) => (
+                    <div className="project-file-item" key={file.fileName}>
+                      <span>
+                        {file.fileName} · {formatFileSize(file.fileSize)}
+                      </span>
+
+                      <button type="button" onClick={() => removeFile(file.fileName)}>
+                        Убрать
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label>Необходимые навыки</label>
 
@@ -149,15 +246,15 @@ export function ProjectFormModal({ project, onClose, onSuccess }: ProjectFormMod
             </div>
           </div>
 
-          {error && <p>{error}</p>}
+          {error && <p className="form-error">{error}</p>}
 
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting
-                ? "Сохранение..."
-                : isEditing
+              ? "Сохранение..."
+              : isEditing
                 ? "Сохранить изменения"
                 : "Создать проект"}
-            </button>
+          </button>
         </form>
       </div>
     </div>

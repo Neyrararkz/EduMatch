@@ -64,7 +64,7 @@ export function RegisterPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               type="password"
-              placeholder="Минимум 6 символов"
+              placeholder="Введите пароль"
             />
           </div>
 
@@ -73,7 +73,7 @@ export function RegisterPage() {
             <input
               value={university}
               onChange={(event) => setUniversity(event.target.value)}
-              placeholder="Например, IT Step Academy"
+              placeholder="Школа/Колледж/Университет"
             />
           </div>
 

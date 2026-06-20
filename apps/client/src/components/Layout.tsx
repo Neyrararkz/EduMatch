@@ -1,9 +1,13 @@
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+
 import { useAuth } from "../app/AuthProvider";
+import { getNotificationsSummary } from "../shared/api/notifications";
+import type { NotificationsSummary } from "../shared/types/notification";
 import { UserAvatar } from "../shared/ui/UserAvatar";
 
 type LayoutProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 const navItems = [
@@ -12,19 +16,62 @@ const navItems = [
   { to: "/applications", label: "Заявки" },
 ];
 
-// function getPageTitle(pathname: string) {
-//   if (pathname.startsWith("/projects")) return "Проекты";
-//   if (pathname === "/users") return "Тиммейты";
-//   if (pathname.startsWith("/users/")) return "Профиль";
-//   if (pathname.startsWith("/applications")) return "Заявки";
-//   if (pathname.startsWith("/profile")) return "Профиль";
-//   return "EduMatch";
-// }
+const emptySummary: NotificationsSummary = {
+  pendingApplicationsCount: 0,
+  unreadMessagesCount: 0,
+  unreadMessagesByProject: [],
+};
+
+function formatBadgeCount(count: number) {
+  return count > 99 ? "99+" : String(count);
+}
 
 export function Layout({ children }: LayoutProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, accessToken, logout } = useAuth();
+
+  const [summary, setSummary] = useState<NotificationsSummary>(emptySummary);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setSummary(emptySummary);
+      return;
+    }
+
+    const token = accessToken;
+    let isMounted = true;
+
+    async function loadSummary() {
+      try {
+        const response = await getNotificationsSummary(token);
+
+        if (isMounted) {
+          setSummary(response.summary);
+        }
+      } catch {
+        if (isMounted) {
+          setSummary(emptySummary);
+        }
+      }
+    }
+
+    function handleRefresh() {
+      void loadSummary();
+    }
+
+    void loadSummary();
+
+    const intervalId = window.setInterval(handleRefresh, 10000);
+
+    window.addEventListener("edumatch-notifications-refresh", handleRefresh);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("edumatch-notifications-refresh", handleRefresh);
+    };
+  }, [accessToken]);
 
   async function handleLogout() {
     await logout();
@@ -36,7 +83,7 @@ export function Layout({ children }: LayoutProps) {
       <aside className="sidebar">
         <div className="sidebar-top">
           <Link to="/projects" className="brand">
-            <img src="favicon.png" alt="logo" className="brand-logo"/>
+            <img src="/favicon.png" alt="logo" className="brand-logo" />
             <span className="brand-text">EduMatch</span>
           </Link>
 
@@ -44,13 +91,22 @@ export function Layout({ children }: LayoutProps) {
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.to);
 
+              const badgeCount =
+                item.to === "/applications" ? summary.pendingApplicationsCount : 0;
+
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   className={`sidebar-link ${isActive ? "active" : ""}`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+
+                  {badgeCount > 0 && (
+                    <span className="notification-badge">
+                      {formatBadgeCount(badgeCount)}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -74,6 +130,12 @@ export function Layout({ children }: LayoutProps) {
             onClick={() => navigate("/profile")}
           >
             <UserAvatar src={user?.avatar_url} name={user?.full_name} size="sm" />
+
+            {summary.unreadMessagesCount > 0 && (
+              <span className="notification-badge profile-notification-badge">
+                {formatBadgeCount(summary.unreadMessagesCount)}
+              </span>
+            )}
           </button>
         </header>
 

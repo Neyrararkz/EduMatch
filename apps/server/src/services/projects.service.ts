@@ -41,6 +41,7 @@ export async function createProjectForUser(
     description: input.description,
     deadline: input.deadline,
     requiredSkillIds: input.requiredSkillIds,
+    files: input.files,
   });
 }
 

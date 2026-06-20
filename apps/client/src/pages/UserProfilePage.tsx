@@ -3,6 +3,11 @@ import { useParams } from "react-router-dom";
 
 import { useAuth } from "../app/AuthProvider";
 import { ProjectDetailsModal } from "../features/projects/ProjectDetailsModal";
+import {
+  getNotificationsSummary,
+  markProjectChatAsRead,
+  requestNotificationsRefresh,
+} from "../shared/api/notifications";
 import { getProjects } from "../shared/api/projects";
 import { getMySkills, getSkills, getUserSkills, updateMySkills } from "../shared/api/skills";
 import { getUserById, updateMe, type UpdateProfileInput } from "../shared/api/users";
@@ -27,6 +32,10 @@ const statusLabels: Record<string, string> = {
 function formatDate(date: string | null) {
   if (!date) return "Без дедлайна";
   return new Date(date).toLocaleDateString("ru-RU");
+}
+
+function formatBadgeCount(count: number) {
+  return count > 99 ? "99+" : String(count);
 }
 
 function getMainSkill(project: Project) {
@@ -63,6 +72,7 @@ export function UserProfilePage() {
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [unreadByProject, setUnreadByProject] = useState<Record<string, number>>({});
 
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
@@ -113,6 +123,53 @@ export function UserProfilePage() {
 
     loadProfile();
   }, [accessToken, currentUser, isMyProfile, profileUserId]);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setUnreadByProject({});
+      return;
+    }
+
+    const token = accessToken;
+    let isMounted = true;
+
+    async function loadNotificationSummary() {
+      try {
+        const response = await getNotificationsSummary(token);
+
+        const nextUnreadByProject = response.summary.unreadMessagesByProject.reduce<
+          Record<string, number>
+        >((acc, project) => {
+          acc[project.project_id] = project.unread_count;
+          return acc;
+        }, {});
+
+        if (isMounted) {
+          setUnreadByProject(nextUnreadByProject);
+        }
+      } catch {
+        if (isMounted) {
+          setUnreadByProject({});
+        }
+      }
+    }
+
+    function handleRefresh() {
+      void loadNotificationSummary();
+    }
+
+    void loadNotificationSummary();
+
+    const intervalId = window.setInterval(handleRefresh, 10000);
+
+    window.addEventListener("edumatch-notifications-refresh", handleRefresh);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("edumatch-notifications-refresh", handleRefresh);
+    };
+  }, [accessToken]);
 
   const createdProjects = useMemo(() => {
     if (!profileUserId) return [];
@@ -227,6 +284,32 @@ export function UserProfilePage() {
     }
   }
 
+  async function handleProjectOpen(project: Project) {
+    setSelectedProject(project);
+
+    const canReadChat = Boolean(
+      currentUser &&
+        (project.creator_id === currentUser.id ||
+          project.members.some((member) => member.id === currentUser.id))
+    );
+
+    if (!accessToken || !canReadChat) return;
+
+    const token = accessToken;
+
+    setUnreadByProject((current) => ({
+      ...current,
+      [project.id]: 0,
+    }));
+
+    try {
+      await markProjectChatAsRead(project.id, token);
+      requestNotificationsRefresh();
+    } catch {
+      return;
+    }
+  }
+
   function handleProjectUpdated(updatedProject: Project) {
     setProjects((currentProjects) =>
       currentProjects.map((project) =>
@@ -246,15 +329,26 @@ export function UserProfilePage() {
   }
 
   function renderProjectCard(project: Project) {
+    const unreadCount = unreadByProject[project.id] ?? 0;
+
     return (
       <button
         type="button"
         className="profile-project-card"
-        onClick={() => setSelectedProject(project)}
+        onClick={() => handleProjectOpen(project)}
         key={project.id}
       >
         <div className="profile-project-card-header">
-          <h3>{project.title}</h3>
+          <div className="project-card-title-row">
+            <h3>{project.title}</h3>
+
+            {unreadCount > 0 && (
+              <span className="notification-badge profile-project-notification-badge">
+                {formatBadgeCount(unreadCount)}
+              </span>
+            )}
+          </div>
+
           <span>{statusLabels[project.status] ?? project.status}</span>
         </div>
 
@@ -295,12 +389,16 @@ export function UserProfilePage() {
               <div className="profile-facts">
                 <p>Учебное заведение: {profileUser.university ?? "Не указано"}</p>
                 <p>Курс: {profileUser.course ?? "Не указан"}</p>
-                <p>Рейтинг: {profileUser.rating ?? "0"}</p>
               </div>
 
               <div>
                 <h3>О себе</h3>
-                <p>{profileUser.about ?? "Пользователь пока ничего не рассказал о себе."}</p>
+                <p>
+                  {profileUser.about ??
+                    (isMyProfile
+                      ? "Вы пока ничего не рассказали о себе."
+                      : "Пользователь пока ничего не рассказал о себе.")}
+                </p>
               </div>
 
               {isMyProfile && (
@@ -324,10 +422,11 @@ export function UserProfilePage() {
                   </button>
                 )}
               </div>
+
               <div>
                 <label>Имя</label>
                 <input value={fullName} onChange={(event) => setFullName(event.target.value)} />
-              </div>              
+              </div>
 
               <div>
                 <label>Учебное заведение</label>
@@ -353,6 +452,7 @@ export function UserProfilePage() {
               </div>
 
               <button type="submit">Сохранить</button>
+
               <button type="button" onClick={() => setIsEditing(false)}>
                 Отмена
               </button>
@@ -365,7 +465,7 @@ export function UserProfilePage() {
             <h2>Навыки</h2>
 
             {skills.length === 0 ? (
-              <p>Навыки пока не указаны.</p>
+              <p>{isMyProfile ? "Вы пока не указали навыки." : "Навыки пока не указаны."}</p>
             ) : (
               <div className="skills-grid">
                 {skills.map((skill) => (
@@ -417,13 +517,17 @@ export function UserProfilePage() {
           </section>
 
           <section className="profile-section-card">
-            <h2>Проекты пользователя</h2>
+            <h2>{isMyProfile ? "Ваши проекты" : "Проекты пользователя"}</h2>
 
             <div className="profile-project-group">
-              <h3>Созданные проекты</h3>
+              <h3>{isMyProfile ? "Созданные вами проекты" : "Созданные проекты"}</h3>
 
               {createdProjects.length === 0 ? (
-                <p>Пользователь пока не создал проектов.</p>
+                <p>
+                  {isMyProfile
+                    ? "Вы пока не создали проектов."
+                    : "Пользователь пока не создал проектов."}
+                </p>
               ) : (
                 <div className="profile-project-grid">
                   {createdProjects.map((project) => renderProjectCard(project))}
@@ -432,10 +536,16 @@ export function UserProfilePage() {
             </div>
 
             <div className="profile-project-group">
-              <h3>Участвует в проектах</h3>
+              <h3>
+                {isMyProfile ? "Вы участвуете в проектах" : "Участвует в проектах"}
+              </h3>
 
               {participatingProjects.length === 0 ? (
-                <p>Пользователь пока не участвует в проектах.</p>
+                <p>
+                  {isMyProfile
+                    ? "Вы пока не участвуете в проектах."
+                    : "Пользователь пока не участвует в проектах."}
+                </p>
               ) : (
                 <div className="profile-project-grid">
                   {participatingProjects.map((project) => renderProjectCard(project))}

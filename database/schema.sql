@@ -1,5 +1,7 @@
 BEGIN;
 
+DROP TABLE IF EXISTS project_chat_reads CASCADE;
+DROP TABLE IF EXISTS project_files CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS project_chats CASCADE;
@@ -102,14 +104,21 @@ CREATE TABLE messages (
   deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE notifications (
+CREATE TABLE project_files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(60) NOT NULL,
-  title VARCHAR(160) NOT NULL,
-  body TEXT,
-  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  file_name VARCHAR(255) NOT NULL,
+  file_type VARCHAR(120) NOT NULL,
+  file_size INTEGER NOT NULL,
+  file_data TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE project_chat_reads (
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  last_read_at TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01',
+  PRIMARY KEY (project_id, user_id)
 );
 
 CREATE INDEX idx_users_email ON users(email);
@@ -123,7 +132,9 @@ CREATE INDEX idx_project_applications_status ON project_applications(status);
 
 CREATE INDEX idx_messages_chat_id_created_at ON messages(chat_id, created_at);
 
-CREATE INDEX idx_notifications_user_id_is_read ON notifications(user_id, is_read);
+CREATE INDEX idx_project_files_project_id ON project_files(project_id);
+
+CREATE INDEX idx_project_chat_reads_user_id ON project_chat_reads(user_id);
 
 INSERT INTO skills (name) VALUES
   ('React'),

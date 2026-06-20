@@ -13,6 +13,7 @@ import { projectsRouter } from "./routes/projects.router.js";
 import { AppError } from "./utils/app-error.js";
 import { skillsRouter } from "./routes/skills.router.js";
 import { applicationsRouter } from "./routes/applications.router.js";
+import { notificationsRouter } from "./routes/notifications.router.js";
 
 const notFoundHandler: RequestHandler = (_req, res) => {
   res.status(404).json({
@@ -46,8 +47,8 @@ export const createApp = (): Express => {
     })
   );
 
-  app.use(express.json({ limit: "5mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
   app.use("/api", healthRouter);
   app.use("/api/auth", authRouter);
@@ -55,6 +56,7 @@ export const createApp = (): Express => {
   app.use("/api/projects", projectsRouter);
   app.use("/api/skills", skillsRouter);
   app.use("/api/applications", applicationsRouter);
+  app.use("/api/notifications", notificationsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
