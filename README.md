@@ -383,35 +383,46 @@ MVP реализован.
 
 ## Скриншоты интерфейса
 
-Projects
-![alt text](Projects.PNG)
+### Projects
 
-Teammates
-![alt text](Users.PNG)
+![Projects](docs/Screenshots/Projects.PNG)
 
-Profile
-![alt text](Profile.PNG)
+### Teammates
 
-Edit profile
-![alt text](EditProfile.PNG)
+![Teammates](docs/Screenshots/Users.PNG)
 
-Create a project
-![alt text](CreateProject.PNG)
+### Profile
 
-Project details
-![alt text](ProjectDetails.PNG)
+![Profile](docs/Screenshots/Profile.PNG)
 
-Project chat
-![alt text](ProjectChat.PNG)
+### Edit profile
 
-Applications
-![alt text](Applcations.PNG)
+![Edit profile](docs/Screenshots/EditProfile.PNG)
 
-Welcome page
-![alt text](Welcome.PNG)
+### Create a project
 
-Login
-![alt text](Login.PNG)
+![Create a project](docs/Screenshots/CreateProject.PNG)
 
-Register
-![alt text](Register.PNG)
+### Project details
+
+![Project details](docs/Screenshots/ProjectDetails.PNG)
+
+### Project chat
+
+![Project chat](docs/Screenshots/ProjectChat.PNG)
+
+### Applications
+
+![Applications](docs/Screenshots/Applications.PNG)
+
+### Welcome page
+
+![Welcome page](docs/Screenshots/Welcome.PNG)
+
+### Login
+
+![Login](docs/Screenshots/Login.PNG)
+
+### Register
+
+![Register](docs/Screenshots/Register.PNG)
